@@ -1,0 +1,1227 @@
+{
+  "name": "LinkedIn Workflow Extended",
+  "nodes": [
+    {
+      "parameters": {
+        "model": "anthropic/claude-3.7-sonnet",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        6940,
+        2300
+      ],
+      "id": "2f523084-3825-49b5-82c8-976dc7c36f83",
+      "name": "OpenRouter Chat Model1",
+      "credentials": {
+        "openRouterApi": {
+          "id": "jck8ilIpYpAaoRuI",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "trigger": [
+          "message"
+        ],
+        "channelId": {
+          "__rl": true,
+          "value": "C08GJ3CG342",
+          "mode": "list",
+          "cachedResultName": "slacktrigger_n8n_blog"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.slackTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "17d23c83-fa2b-416f-a8c2-2cfcf12fa7e0",
+      "name": "Slack Trigger",
+      "webhookId": "c432a5ad-cd77-4751-ba17-60d5e8dae2d2",
+      "credentials": {
+        "slackApi": {
+          "id": "p542nyRCQseQTGQy",
+          "name": "Slack account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        2560,
+        1760
+      ],
+      "id": "75e53c12-9b25-4942-8424-44542c818855",
+      "name": "When chat message received",
+      "webhookId": "202a90db-971d-40e5-a86d-6c3e748f3a40"
+    },
+    {
+      "parameters": {
+        "model": "perplexity/sonar",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        5980,
+        2600
+      ],
+      "id": "39a0524a-0398-4220-a631-af2f9a050d2e",
+      "name": "OpenRouter Chat Model3",
+      "credentials": {
+        "openRouterApi": {
+          "id": "jck8ilIpYpAaoRuI",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract and merge JSON from Code Node output\nconst jsonData = $input.all().map(item => item.json);\n\n// Function to format structured text for Google Docs\nfunction formatContent(data) {\n    let content = `# Research\\n\\n`;\n\n    data.forEach(section => {\n        content += `## ${section.section}\\n`;\n\n        // Loop through all keys except 'section'\n        Object.keys(section).forEach(key => {\n            if (key !== \"section\") {\n                if (Array.isArray(section[key])) {\n                    content += `- **${key.replace(/_/g, \" \")}**:\\n  - ` + section[key].join(\"\\n  - \") + `\\n\\n`;\n                } else {\n                    content += `- **${key.replace(/_/g, \" \")}**: ${section[key]}\\n\\n`;\n                }\n            }\n        });\n    });\n\n    return content.trim();\n}\n\n// Generate the formatted text output\nconst documentText = formatContent(jsonData);\n\n// Return structured text for Google Docs\nreturn [{\n    json: {\n        document_name: \"Research\",\n        content: documentText // This ensures 'content' is always returned\n    }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        6500,
+        2280
+      ],
+      "id": "cdd77bd7-5724-456b-9318-48cef4d8c15d",
+      "name": "Code2"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Brand voice to follow \n\n- Write with authentic expertise and direct communication\n- Use confident, straightforward language demonstrating real experience\n- Be intelligent without academic or overly formal phrasing\n- Speak directly to the reader as if sharing insider knowledge\n- Avoid corporate jargon and marketing-speak\n- Use contractions and occasional casual phrases to maintain authenticity\n- Make definitive statements rather than hedging\n- Balance technical accuracy with accessibility\n- Structure content with clear, punchy headers and concise explanations\n- Prioritize actionable advice over theoretical concepts\n- Sound like a successful practitioner sharing hard-earned wisdom\n- Avoid both overly casual language (\"stuff,\" \"randos\") and artificially elevated vocabulary (\"magnetizes elite collaborators\")\n- Use precise, impactful language that respects reader intelligence while remaining accessible\n\n\nInstructions\n\nUse research as context only {{ $json.output }} in order to create a narrative driven posts that give readers actionable insights and takeaways and impact business in positive ways (only use data if it's relevant don't pick topics around AI marketing tools blindly)\n\nWrite one detailed (400 words) linkedin post from one of the ideas - {{ $json.content }}\n\nContent themes + angles to which you will create post - \n\nLinkedin format - Carousel, text post\n\nContent ideas to follow to create post - {{ $json.content }} (Pick around how marketers can scale marketing efforts with AI using n8n for specific marketing use case like ad campaign, scaling outbound, sclaing content creation)\n\n\n- Avoid sharing hashtags\n- Avoid taking format from content ideas \n- Create 1 detailed post ( 400 words) \n- Topic - Pick topic around how marketers can scale marketing efforts with AI using n8n for specific marketing use case\n\n\nOutput format\n\n- Title\n- Content\n- Avoid sending this format {\n      \"topic\": \"\",\n      \"content\": \"\",\n}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are a LinkedIn content strategist and conversion copywriter.\n\nYour goal is to generate high-performing, long-form LinkedIn posts — each based on a strategic content idea.\n\nUse content ideas and come up with 1 400 word posts\n\nThese are not casual updates or short tips. Each post should be a 400-word mini-article designed to:\n\nShare deep insight, story, or tactical advice in an authentic, scroll-stopping way\n\nFeel natural for a professional audience, with a human voice and practical depth\n\nWork well as a single post or be repurposed into a carousel\n\nWriting Guidelines:\nStart with a hook in the first 2 lines that will expand the post (e.g., bold statement, problem question, surprising stat)\n\nQuickly introduce the core idea or story and why it matters\n\nBreak the middle into 2–3 key insights, steps, or moments\n\nUse line breaks for visual flow and readability\n\nEnd with a light CTA or prompt to encourage conversation (e.g., “What’s your experience?” or “Curious to hear your take.”)\n\nMaintain a professional but human tone — clarity > cleverness\n\nOutput Rules:\nReturn only the structured JSON object\n\nNo extra commentary, explanations, or markdown formatting\n\nEach post should be ~300 words, clearly written, and formatted for native LinkedIn use\n\nAvoid hashtags and emojis\n\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        7000,
+        2000
+      ],
+      "id": "cba6b620-ed11-4cbc-a107-22ed972501c1",
+      "name": "Linkedin post generating agent"
+    },
+    {
+      "parameters": {
+        "content": "Analyze YouTube & X for Topics and Context",
+        "height": 1180,
+        "width": 1840,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2520,
+        1660
+      ],
+      "id": "835d45fe-9dbb-4963-976c-174156073f17",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "Generate Channel Specific Content\n",
+        "height": 1180,
+        "width": 720,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        5980,
+        1660
+      ],
+      "id": "7a99a093-9215-4afa-b397-28d9cabdddff",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "Human in the Loop Review & Automated Distribution\n\n\n\n\n\n\n",
+        "height": 1180,
+        "width": 2380,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        6700,
+        1660
+      ],
+      "id": "8c311774-0720-4b43-ab90-5c246a0910a9",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.apify.com/v2/acts/streamers~youtube-scraper/run-sync-get-dataset-items?token=apify_api_MI1KcrM3lw1B2QyUpOiUzMMYbQOAiC4EN3Oa",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n    \"dateFilter\": \"month\",\n    \"downloadSubtitles\": false,\n    \"hasCC\": false,\n    \"hasLocation\": false,\n    \"hasSubtitles\": false,\n    \"is360\": false,\n    \"is3D\": false,\n    \"is4K\": false,\n    \"isBought\": false,\n    \"isHD\": false,\n    \"isHDR\": false,\n    \"isLive\": false,\n    \"isVR180\": false,\n    \"lengthFilter\": \"between420\",\n    \"maxResultStreams\": 0,\n    \"maxResults\": 10,\n    \"maxResultsShorts\": 10,\n    \"preferAutoGeneratedSubtitles\": true,\n    \"saveSubsToKVS\": true,\n    \"searchQueries\": [\n        \"n8n\"\n    ],\n    \"sortingOrder\": \"views\",\n    \"subtitlesLanguage\": \"en\",\n    \"videoType\": \"video\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2960,
+        1760
+      ],
+      "id": "117478f6-6e86-45e7-bfd6-fd32f56cd7e1",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "url": "https://api.apify.com/v2/acts/pintostudio~youtube-transcript-scraper/run-sync-get-dataset-items?token=apify_api_MI1KcrM3lw1B2QyUpOiUzMMYbQOAiC4EN3Oa",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"videoUrl\": \"{{ $json.url }}\"\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3580,
+        1940
+      ],
+      "id": "69d74287-0c37-4185-b265-0628a85da28b",
+      "name": "HTTP Request2"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        3180,
+        1760
+      ],
+      "id": "032128e0-dcc0-45fa-9e5f-f6fb1f79adaf",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.apify.com/v2/acts/danek~twitter-scraper-ppr/run-sync-get-dataset-items?token=apify_api_MI1KcrM3lw1B2QyUpOiUzMMYbQOAiC4EN3Oa",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n    \"includeReplies\": false,\n    \"includeRetweets\": false,\n    \"max_posts\": 10,\n    \"username\": \"username\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2920,
+        2220
+      ],
+      "id": "9cf7286e-6be0-4ec9-8267-35e56dcc228c",
+      "name": "HTTP Request3"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Access all input items (each one is a video)\nconst items = $input.all();\n\n// For each video item, join the captions from data[]\nconst result = items.map(item => {\n  const data = item.json.data;\n\n  // Safely join text only if data is an array\n  const fullCaption = Array.isArray(data)\n    ? data.map(d => d.text).join(' ')\n    : '';\n\n  return {\n    json: {\n      full_caption: fullCaption\n    }\n  };\n});\n\nreturn result;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3480,
+        1740
+      ],
+      "id": "c081a418-049d-4ccb-89f9-24b13cbfbc42",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-3.5-turbo",
+          "mode": "list",
+          "cachedResultName": "gpt-3.5-turbo"
+        },
+        "options": {
+          "maxTokens": 128,
+          "temperature": 0.7,
+          "maxRetries": 1
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        5140,
+        2500
+      ],
+      "id": "44a3ae28-1550-4d11-b395-158db8ab67ce",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "3HqNl1FfyWWGQxqL",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get all input items\nconst items = $input.all();\n\n// Get current time and calculate threshold for 10 days ago\nconst now = new Date();\nconst tenDaysAgo = new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000); // 10 days in ms\n\n// Filter based on both `reply_to` and `created_at`\nconst filtered = items.filter(item => {\n  const replyTo = item.json.reply_to;\n  const createdAt = item.json.created_at;\n\n  const isOriginalPost =\n    replyTo === undefined ||\n    replyTo === null ||\n    replyTo === '[undefined]' ||\n    (Array.isArray(replyTo) && replyTo.length === 0);\n\n  const isRecent =\n    createdAt && new Date(createdAt) >= tenDaysAgo;\n\n  return isOriginalPost && isRecent;\n});\n\nreturn filtered;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3460,
+        2220
+      ],
+      "id": "510cc05d-89b5-42da-9eda-2b2de7f778b2",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {
+          "includeUnpaired": true
+        }
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.1,
+      "position": [
+        4060,
+        2240
+      ],
+      "id": "8af4c65a-1ed6-4400-9c7c-9bc2c6381289",
+      "name": "Merge5"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "chatInput",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        2740,
+        1760
+      ],
+      "id": "13d5e37a-c198-4e9f-9f7e-8cd29569a751",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Youtube transcript: {{ $json.full_caption }}\n\nTw - {{ $json.text }}\n\n### TASK:\nUsing the above, generate a list of **actionable content ideas that are strictly related to makreting nothing technical**. For each idea, include:\n\n- **Title**: Short and clear.\n- **Hook**: Scroll-stopping idea to pull people in.\n- **Format**: Suggest whether it's better as a video, one-pager, thread, etc.\n- **Angle**: What unique point of view ( around how marketers can scale marketing efforts with AI using n8n for specific marketing use case)\n\nNote: Only pick transcripts that are in english \n\n- Avoid technical jargons and technical topics\n- Suggest marketing use cases for beginners who are marketers\n- Marketing Angle, hook, title etc for non-technical marketers\n\n\n**A. YouTube Transcripts from Other Creators**  \nThese are insights from videos that are trending or educational. Use these to understand:\n- What problems they’re solving\n- What frameworks or tools are used\n- What kinds of hooks or structures they follow\n\n[Paste YT transcript content here or insert variable e.g., {{ $json.full_caption }}\n\n**B. My Top Performing Twitter Posts**  \nThese are short-form content examples that resonated well with our audience. Use these to:\n- Extract what tones, angles, or use cases work\n- Mirror themes, language style, and audience engagement patterns\n\n[Paste tweet text here or insert variable e.g.,{{ $json.text }}\n\n\n",
+        "options": {
+          "systemMessage": "You are an expert content strategist helping create high-impact content tailored to a marketing and automation-savvy audience.\n\n### OBJECTIVE:\nGenerate **actionable content ideas** based on:\n1. YouTube transcripts from other creators in our niche\n2. My best-performing Twitter posts\n\nThe output should help us create **videos and one-pagers** that:\n- Are useful and practical\n- Mirror themes and tones that work for our audience\n- Explore new but relevant ideas\n- Lean into content formats that already perform well for us"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        5120,
+        2260
+      ],
+      "id": "8c4283bb-b799-4a00-9f0d-a954484fdc4a",
+      "name": "Content idea generator"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=using the  {{ $json.output }} starting point \n\nResearch and find marketing use cases - around how marketers can scale marketing efforts with AI using n8n for specific marketing use case like ad campaign, scaling outbound, sclaing content creation\n\nPlease conduct deep research on the topic above. Specifically:\n\n- Key Trends and Insights\n- Marketing use cases\n- What’s currently happening in the industry or niche?\n- Are there stats, frameworks, or case studies worth referencing?\n- Popular Opinions vs. Expert Takes\n- What are people saying on social platforms or forums?\n- Are there any contrarian, expert-backed, or field-tested perspectives?\n- Data, Stats, or Real Examples\n- Include any performance benchmarks, studies, or business use cases\n- Source Links or Summarized Citations\n- If quoting or citing, include the origin (author, source, link)\n\nOutput fomat\n\na. topic\nb. key insights\nc. expert takes\nd. Supporting data with source\ne. citations\nf. use cases",
+        "options": {
+          "systemMessage": "You are a senior research strategist trained in high-depth content discovery and synthesis.\n\nYour role is to explore authoritative sources, trends, case studies, and opinion patterns related to a specific topic or query.\n\nYou always prioritize factual accuracy, real-world examples, and strategic relevance over surface-level summaries.\n\nYour insights are designed to inform downstream content agents who will create long-form posts, thought leadership, or campaign assets based on your research.\n\nDo not write final posts or content. Your output should consist of organized, useful findings that serve as a research base."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        6100,
+        2300
+      ],
+      "id": "2e3d6d5d-3821-45f4-8082-75615e629389",
+      "name": "Research agent"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {
+          "includeUnpaired": true
+        }
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.1,
+      "position": [
+        6660,
+        1900
+      ],
+      "id": "29306515-e6ed-4a04-968c-e746bda2b568",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.first().json.output || '';\n\nconst cleanedLines = raw\n  .split('\\n')\n  .map(line => {\n    const trimmed = line.trim();\n\n    // Remove lines like \"# LinkedIn content\", \"## undefined\", or just \"#\"\n    if (/^#+\\s*(linkedin content|undefined)?$/i.test(trimmed)) return '';\n    if (/^- \\*\\*.*\\*\\*:\\s*#/.test(trimmed)) return '';\n    if (/^#+\\s*$/.test(trimmed)) return '';\n\n    // Convert markdown headers to plain lines\n    const headerMatch = trimmed.match(/^#+\\s*(.+)/);\n    if (headerMatch) {\n      return headerMatch[1].trim();\n    }\n\n    return trimmed;\n  });\n\n// Rebuild the cleaned output while preserving paragraph breaks\nlet finalOutput = '';\nfor (let i = 0; i < cleanedLines.length; i++) {\n  const line = cleanedLines[i];\n\n  if (line === '') {\n    // Preserve paragraph breaks (double line breaks)\n    finalOutput += '\\n\\n';\n  } else {\n    // Regular content\n    finalOutput += line + '\\n';\n  }\n}\n\nreturn [\n  {\n    json: {\n      linkedin_post: finalOutput.trim()\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        7400,
+        2000
+      ],
+      "id": "ee8f1dc6-0ade-4212-a0f7-b35a5b9051d8",
+      "name": "Linkedin formatted output1"
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "data[0].b64_json",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        8800,
+        2360
+      ],
+      "id": "38f5a634-c400-4860-a2ca-88036dbe2b47",
+      "name": "Convert to File2"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/images/generations",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"gpt-image-1\",\n  \"prompt\": \"{{json.prompt}}\",\n  \"n\": 1,\n  \"size\": \"1536x1024\"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        8380,
+        2380
+      ],
+      "id": "e3c135cd-db4a-42c0-aaa2-c9adcff194c5",
+      "name": "Linkedin image generation using openAI1",
+      "retryOnFail": false,
+      "credentials": {
+        "openAiApi": {
+          "id": "3HqNl1FfyWWGQxqL",
+          "name": "OpenAi account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "folderId": "1v5SEZX2ge-EzFEL_vgyM48j1naFHu2fC",
+        "title": "Linkedin posts"
+      },
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        8180,
+        1840
+      ],
+      "id": "9d128de2-9410-4697-9a5d-1a974998aa14",
+      "name": "Linkedin doc creation1",
+      "executeOnce": true,
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "mpFLowSqXgA725bu",
+          "name": "Google Docs account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {
+          "includeUnpaired": true
+        }
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.1,
+      "position": [
+        8480,
+        1920
+      ],
+      "id": "cb8a325f-0392-4676-b452-14222778b57c",
+      "name": "Merge8"
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C08GJ3CG342",
+          "mode": "list",
+          "cachedResultName": "slacktrigger_n8n_blog"
+        },
+        "message": "=Here is the post - https://docs.google.com/document/d/{{ $json.documentId }}/edit?tab=t.0",
+        "approvalOptions": {
+          "values": {
+            "approvalType": "double"
+          }
+        },
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [
+        9040,
+        1920
+      ],
+      "id": "8ab23d29-a6c6-42c8-ab85-ca1192fd96f2",
+      "name": "Human in the loop1",
+      "webhookId": "085ce980-c9c9-42d5-916d-4e8442d2cfb8",
+      "credentials": {
+        "slackApi": {
+          "id": "p542nyRCQseQTGQy",
+          "name": "Slack account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "98673ca3-970f-4927-a230-709f3edd99b9",
+              "leftValue": "={{ $json.data.approved }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        9260,
+        1920
+      ],
+      "id": "4068411a-62ef-4072-8254-ecf0ecfca6bf",
+      "name": "If2"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "numberInputs": 3,
+        "options": {
+          "includeUnpaired": true
+        }
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.1,
+      "position": [
+        9580,
+        2180
+      ],
+      "id": "76cf7759-df80-4ced-ab4a-93ffccd31c26",
+      "name": "Merge9"
+    },
+    {
+      "parameters": {
+        "person": "PnQwcsps5V",
+        "text": "={{ $json.linkedin_post }}",
+        "shareMediaCategory": "IMAGE",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.linkedIn",
+      "typeVersion": 1,
+      "position": [
+        9780,
+        2180
+      ],
+      "id": "2dec26f5-1bd1-4073-97d3-555c48a095f8",
+      "name": "Post on linkedin1",
+      "credentials": {
+        "linkedInOAuth2Api": {
+          "id": "YKrUbiojfwe10bEe",
+          "name": "LinkedIn account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentURL": "=https://docs.google.com/document/d/{{ $json.id }}/edit",
+        "actionsUi": {
+          "actionFields": [
+            {
+              "action": "insert",
+              "text": "={{ $json.linkedin_post }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        8780,
+        1920
+      ],
+      "id": "4e5a2c58-aefc-4472-a568-d1dd07a2a75d",
+      "name": "Linkedin content doc1"
+    },
+    {
+      "parameters": {
+        "content": "Research for Additional Data Points & Generate Specific Post Ideas",
+        "height": 1180,
+        "width": 1620
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        4360,
+        1660
+      ],
+      "id": "c28823d1-fdcc-441d-8bf1-99e6db3b439e",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Content: {{json.linkedin_post}} \n\nFor the given post content, generate 1–2 short, vivid image prompts that visually capture the core idea. Each should include:\n\n- A short OpenAI-friendly prompt (20 words or less)\n- A clear visual **style** (flat, 3D, cinematic, sketch, vaporwave, etc.)\n- A suggested **format** (square, portrait, wide)\n\nOutput JSON format:\n{\n  \"image_prompt\": \"...\",\n  \"style\": \"...\",\n  \"format\": \"...\"\n}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are an assistant that converts short social media posts—especially LinkedIn-style content—into high-quality image prompts for generative AI models like DALL·E or Stable Diffusion.\n\nYour goal is to extract the main visual idea from the post and convert it into a short, vivid, OpenAI-friendly image prompt.\n\nFor each prompt:\n\nUse clear visual nouns and actions (e.g., \"solo creator,\" \"digital agents,\" \"holographic screen\")\n\nAvoid abstract language (e.g., no \"growth mindset\" or \"innovation\")\n\nKeep it under 20 words\n\nInclude a visual style (e.g. isometric, flat vector, cinematic photo, watercolor sketch)\n\nInclude a suggested format (e.g. square, 16:9 wide, vertical portrait)"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        7860,
+        2300
+      ],
+      "id": "4eb05c4a-5499-4b09-a02a-3a7d6002b775",
+      "name": "Image prompt generator"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "content_idea"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        6200,
+        2520
+      ],
+      "id": "6ce73c97-a98c-4b90-bb81-38ed9ebde280",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "perplexity_research"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        7080,
+        2220
+      ],
+      "id": "e2f6aefc-be7c-436e-b4a8-69ec56db17f0",
+      "name": "Simple Memory1"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "linkedin_post"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        7920,
+        2520
+      ],
+      "id": "b469b7ab-c921-4749-9406-4ac7618655b7",
+      "name": "Simple Memory2"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        7760,
+        2520
+      ],
+      "id": "5e1e73e2-1d67-4fb1-8c6a-5e978ed23d10",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "3HqNl1FfyWWGQxqL",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "summarizationMethodAndPrompts": {
+            "values": {
+              "combineMapPrompt": "Summarize the following marketing idea research into clear, bullet-point insights:\n- Emphasize use cases\n- Highlight unique angles\n- Stay under 1000 tokens total\n- Focus on marketing + AI\n",
+              "prompt": "Combine the following summaries into a final, short bullet-point list:\n- Remove redundancy\n- Keep only high-value insights\n- Limit to 5–7 points max\n- Focus on marketing + automation use cases\n\n{text}"
+            }
+          }
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainSummarization",
+      "typeVersion": 2.1,
+      "position": [
+        5480,
+        2260
+      ],
+      "id": "710f7cd1-879c-425b-8941-906e74e39f19",
+      "name": "Summarization Chain"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "gpt-4o"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        5580,
+        2480
+      ],
+      "id": "72f4c0e4-f398-405b-b648-32464d2fcc01",
+      "name": "OpenAI Chat Model2",
+      "credentials": {
+        "openAiApi": {
+          "id": "3HqNl1FfyWWGQxqL",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 10
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        4404.843309403707,
+        2240
+      ],
+      "id": "f2882907-1eff-4b7b-9d32-e80a8f6d5334",
+      "name": "Wait",
+      "webhookId": "a3e9a7d4-2e24-4e75-803e-184594c3835f"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        4640,
+        2240
+      ],
+      "id": "fb1dcf7f-d057-4f56-a642-9f9aeb500b8a",
+      "name": "Loop Over Items1"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "name": "Replace Me",
+      "typeVersion": 1,
+      "position": [
+        4860,
+        2240
+      ],
+      "id": "31dd84f8-5993-4ab8-b267-b9aaf0159d45"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "OpenRouter Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Linkedin post generating agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Research agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code2": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Linkedin post generating agent": {
+      "main": [
+        [
+          {
+            "node": "Linkedin formatted output1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request2": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Merge5",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "HTTP Request3": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Content idea generator",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "Merge5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge5": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP Request3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Content idea generator": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Summarization Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Research agent": {
+      "main": [
+        [
+          {
+            "node": "Code2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Linkedin post generating agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Linkedin image generation using openAI1": {
+      "main": [
+        [
+          {
+            "node": "Convert to File2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Linkedin formatted output1": {
+      "main": [
+        [
+          {
+            "node": "Linkedin doc creation1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge8",
+            "type": "main",
+            "index": 1
+          },
+          {
+            "node": "Merge9",
+            "type": "main",
+            "index": 1
+          },
+          {
+            "node": "Image prompt generator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Linkedin doc creation1": {
+      "main": [
+        [
+          {
+            "node": "Merge8",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge8": {
+      "main": [
+        [
+          {
+            "node": "Linkedin content doc1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Human in the loop1": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "Merge9",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File2": {
+      "main": [
+        [
+          {
+            "node": "Merge9",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Merge9": {
+      "main": [
+        [
+          {
+            "node": "Post on linkedin1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Linkedin content doc1": {
+      "main": [
+        [
+          {
+            "node": "Human in the loop1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Image prompt generator": {
+      "main": [
+        [
+          {
+            "node": "Linkedin image generation using openAI1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Research agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory1": {
+      "ai_memory": [
+        [
+          {
+            "node": "Linkedin post generating agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory2": {
+      "ai_memory": [
+        [
+          {
+            "node": "Image prompt generator",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Image prompt generator",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Summarization Chain": {
+      "main": [
+        [
+          {
+            "node": "Research agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Summarization Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items1": {
+      "main": [
+        [
+          {
+            "node": "Content idea generator",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Replace Me",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Replace Me": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "c0a46175-e953-4b05-b563-759b55e69c8b",
+  "meta": {
+    "instanceId": "d746e27e7e207d5589a181582ec8c143afc2f97a33fca98becfe3b67e90b90a5"
+  },
+  "id": "skC05jxu0uzyxIZT",
+  "tags": []
+}
