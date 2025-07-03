@@ -1,0 +1,356 @@
+{
+  "name": "basic LinkedIn Agent Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "trigger": [
+          "message"
+        ],
+        "channelId": {
+          "__rl": true,
+          "value": "C08GJ3CG342",
+          "mode": "list",
+          "cachedResultName": "slacktrigger_n8n_blog"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.slackTrigger",
+      "typeVersion": 1,
+      "position": [
+        6480,
+        300
+      ],
+      "id": "dbb425e2-13fd-4326-88e9-eebe8dbb799c",
+      "name": "Slack Trigger",
+      "webhookId": "c432a5ad-cd77-4751-ba17-60d5e8dae2d2",
+      "credentials": {
+        "slackApi": {
+          "id": "F8j6BLFHbNp23wif",
+          "name": "Slack account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={\n  \"promptType\": \"define\",\n  \"text\": \"=Brand voice to follow\\n\\n- Write with authentic expertise and direct communication\\n- Use confident, straightforward language demonstrating real experience\\n- Be intelligent without academic or overly formal phrasing\\n- Speak directly to the reader as if sharing insider knowledge\\n- Avoid corporate jargon and marketing-speak\\n- Use contractions and occasional casual phrases to maintain authenticity\\n- Make definitive statements rather than hedging\\n- Balance technical accuracy with accessibility\\n- Structure content with clear, punchy headers and concise explanations\\n- Prioritize actionable advice over theoretical concepts\\n- Sound like a successful practitioner sharing hard-earned wisdom\\n- Avoid both overly casual language (\\\"stuff,\\\" \\\"randos\\\") and artificially elevated vocabulary (\\\"magnetizes elite collaborators\\\")\\n- Use precise, impactful language that respects reader intelligence while remaining accessible\\n\\n\\nInstructions\\n\\nUse research as context only {{ $json.output }} to create narrative-driven posts that give readers actionable insights and real takeaways. Prioritize relevance to **PolyLabs' mission of democratizing AI literacy**.\\n\\nWrite one detailed (400 words) LinkedIn post from one of the ideas — {{ $json.content }}.\\n\\n🎯 Focus Topics:\\n- Making AI literacy fun and approachable\\n- Explaining concepts like prompt engineering, LLMs, or agents to non-technical users\\n- How educators, creators, or kids can learn or teach AI with tools like Stax or MyAI101\\n- Observations about AI learning gaps and how startups like PolyLabs are solving them\\n- Practical examples of people scaling their learning or impact with AI (e.g., a teacher using Stax, a student building a GPT agent)\\n\\nFormat: Carousel, text post\\n\\n⚠️ Rules:\\n- Avoid sharing hashtags\\n- Avoid copying structure from content ideas\\n- Don’t sound overly promotional — prioritize **value, story, clarity**\\n- Pick just one idea and go deep with it\\n\\n📤 Output format:\\n- Title\\n- Content\\n\\n⚠️ DO NOT send output in this format:\\n{\\n  \\\"topic\\\": \\\"\\\",\\n  \\\"content\\\": \\\"\\\",\\n}\",\n  \"options\": {\n    \"systemMessage\": \"You are a LinkedIn content strategist and AI literacy advocate writing for PolyLabs.\\n\\nYour job is to create powerful, story-driven posts that:\\n- Make AI education feel exciting and doable\\n- Highlight how learners and creators can scale with simple AI tools\\n- Always connect to the deeper mission of **accessible, global AI education**\\n\\nEach post should feel like a mix of:\\n- Founder insight\\n- Educator clarity\\n- Startup builder urgency\\n\\nTone: Confident, curious, concise. Avoid jargon and fluff.\\n\\nFormat:\\n- Hook at the top (statement or story that earns attention)\\n- Clear, visual-friendly line breaks\\n- 2–3 insight blocks with examples or reasoning\\n- CTA to reflect or share\"\n  }\n}\n",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are a LinkedIn content strategist and conversion copywriter.\n\nYour goal is to generate high-performing, long-form LinkedIn posts — each based on a strategic content idea.\n\nUse content ideas and come up with 1 400 word posts\n\nThese are not casual updates or short tips. Each post should be a 400-word mini-article designed to:\n\nShare deep insight, story, or tactical advice in an authentic, scroll-stopping way\n\nFeel natural for a professional audience, with a human voice and practical depth\n\nWork well as a single post or be repurposed into a carousel\n\nWriting Guidelines:\nStart with a hook in the first 2 lines that will expand the post (e.g., bold statement, problem question, surprising stat)\n\nQuickly introduce the core idea or story and why it matters\n\nBreak the middle into 2–3 key insights, steps, or moments\n\nUse line breaks for visual flow and readability\n\nEnd with a light CTA or prompt to encourage conversation (e.g., “What’s your experience?” or “Curious to hear your take.”)\n\nMaintain a professional but human tone — clarity > cleverness\n\nOutput Rules:\nReturn only the structured JSON object\n\nNo extra commentary, explanations, or markdown formatting\n\nEach post should be ~300 words, clearly written, and formatted for native LinkedIn use\n\nAvoid hashtags and emojis\n\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        7140,
+        600
+      ],
+      "id": "7e62ecf4-5430-459d-b74b-6c6ec906c8bc",
+      "name": "Linkedin post generating agent"
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.first().json.output || '';\n\nconst cleanedLines = raw\n  .split('\\n')\n  .map(line => {\n    const trimmed = line.trim();\n\n    // Remove lines like \"# LinkedIn content\", \"## undefined\", or just \"#\"\n    if (/^#+\\s*(linkedin content|undefined)?$/i.test(trimmed)) return '';\n    if (/^- \\*\\*.*\\*\\*:\\s*#/.test(trimmed)) return '';\n    if (/^#+\\s*$/.test(trimmed)) return '';\n\n    // Convert markdown headers to plain lines\n    const headerMatch = trimmed.match(/^#+\\s*(.+)/);\n    if (headerMatch) {\n      return headerMatch[1].trim();\n    }\n\n    return trimmed;\n  });\n\n// Rebuild the cleaned output while preserving paragraph breaks\nlet finalOutput = '';\nfor (let i = 0; i < cleanedLines.length; i++) {\n  const line = cleanedLines[i];\n\n  if (line === '') {\n    // Preserve paragraph breaks (double line breaks)\n    finalOutput += '\\n\\n';\n  } else {\n    // Regular content\n    finalOutput += line + '\\n';\n  }\n}\n\nreturn [\n  {\n    json: {\n      linkedin_post: finalOutput.trim()\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        7540,
+        600
+      ],
+      "id": "52ea3d18-1958-459a-94b2-4335fce17919",
+      "name": "Linkedin formatted output1"
+    },
+    {
+      "parameters": {
+        "folderId": "1v5SEZX2ge-EzFEL_vgyM48j1naFHu2fC",
+        "title": "Linkedin posts"
+      },
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        8320,
+        440
+      ],
+      "id": "2bf0a76f-7e04-4f7f-9049-19e6a227aaff",
+      "name": "Linkedin doc creation1",
+      "executeOnce": true,
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "mpFLowSqXgA725bu",
+          "name": "Google Docs account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C08GJ3CG342",
+          "mode": "list",
+          "cachedResultName": "slacktrigger_n8n_blog"
+        },
+        "message": "=Here is the post - https://docs.google.com/document/d/{{ $json.documentId }}/edit?tab=t.0",
+        "approvalOptions": {
+          "values": {
+            "approvalType": "double"
+          }
+        },
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [
+        9180,
+        520
+      ],
+      "id": "a4dc48fc-081f-4bd1-96d9-158b053b9681",
+      "name": "Human in the loop1",
+      "webhookId": "085ce980-c9c9-42d5-916d-4e8442d2cfb8",
+      "credentials": {
+        "slackApi": {
+          "id": "p542nyRCQseQTGQy",
+          "name": "Slack account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "98673ca3-970f-4927-a230-709f3edd99b9",
+              "leftValue": "={{ $json.data.approved }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        9400,
+        520
+      ],
+      "id": "5c6edaa2-29cd-487e-a606-1704601ca4c2",
+      "name": "If2"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "numberInputs": 3,
+        "options": {
+          "includeUnpaired": true
+        }
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.1,
+      "position": [
+        9720,
+        780
+      ],
+      "id": "62b38ab1-0860-4b84-8573-60318b8e67c2",
+      "name": "Merge9"
+    },
+    {
+      "parameters": {
+        "person": "PnQwcsps5V",
+        "text": "={{ $json.linkedin_post }}",
+        "shareMediaCategory": "IMAGE",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.linkedIn",
+      "typeVersion": 1,
+      "position": [
+        9920,
+        780
+      ],
+      "id": "a05a7c9a-d505-4ac4-bbb2-b895872c8495",
+      "name": "Post on linkedin1",
+      "credentials": {
+        "linkedInOAuth2Api": {
+          "id": "YKrUbiojfwe10bEe",
+          "name": "LinkedIn account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentURL": "=https://docs.google.com/document/d/{{ $json.id }}/edit",
+        "actionsUi": {
+          "actionFields": [
+            {
+              "action": "insert",
+              "text": "={{ $json.linkedin_post }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        8920,
+        520
+      ],
+      "id": "e9e8ca20-7a2d-4fe6-9a4e-bb9371c67754",
+      "name": "Linkedin content doc1",
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "cFosVyPSoxg8NsAC",
+          "name": "Google Docs account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "gpt-4o"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        7140,
+        760
+      ],
+      "id": "c18aca4a-3770-4e7b-809b-0b00041e5810",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "3HqNl1FfyWWGQxqL",
+          "name": "OpenAi account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Slack Trigger": {
+      "main": [
+        [
+          {
+            "node": "Linkedin post generating agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Linkedin post generating agent": {
+      "main": [
+        [
+          {
+            "node": "Linkedin formatted output1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Linkedin formatted output1": {
+      "main": [
+        [
+          {
+            "node": "Linkedin doc creation1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Linkedin content doc1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Linkedin content doc1": {
+      "main": [
+        [
+          {
+            "node": "Human in the loop1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Human in the loop1": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "Merge9",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge9": {
+      "main": [
+        [
+          {
+            "node": "Post on linkedin1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Linkedin post generating agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "51ff7224-2c7c-4a03-a5b1-337d87f3defa",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "d746e27e7e207d5589a181582ec8c143afc2f97a33fca98becfe3b67e90b90a5"
+  },
+  "id": "6lOr5P3HGnG5mwjq",
+  "tags": []
+}
